@@ -1,0 +1,16 @@
+{
+  "error_if_duplicate_hash": false,
+  "apply_rules": false,
+  "fire_webhooks": true,
+  "group_title": "Split transaction title.",
+  "transactions": [
+    {
+      "type": "withdrawal",
+      "date": "2018-09-17T12:46:47+01:00",
+      "amount": "123.45",
+      "description": "Vegetables",
+      "destination_name": "Supermarket",
+      "source_id": "1"
+    }
+  ]
+}
