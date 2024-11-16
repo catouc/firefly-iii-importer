@@ -1,15 +1,18 @@
+use crate::bank_data::Record;
+use crate::firefly::account::{Account,create_account_if_not_exists};
+use std::env;
+
 #[derive(Debug)]
 pub struct Transaction {
-    //pub r#type: TransactionType,
-    pub source_account_id: u32,
-    pub destination_account_id: u32,
+    pub r#type: TransactionType,
+    pub source_account: Account,
+    pub destination_account: Account,
     pub amount: f32,
     pub date: String,
     pub description: String,
 }
 
 
-/*
 impl TryFrom<&Record> for Transaction {
     type Error = Box<dyn std::error::Error>;
     fn try_from(record: &Record) -> Result<Self, Self::Error> {
@@ -18,53 +21,42 @@ impl TryFrom<&Record> for Transaction {
            false => TransactionType::Deposit,
        };
 
-       let amount: f32 = record.amount.replace(",", "").parse()?;
+       let amount: f32 = record.amount.replace(",", "").replace("-", "").parse()?;
 
        let token = env::var("FIREFLY_TOKEN").unwrap();
 
-       let (source_account_id, destination_account_id) = match tx_type {
+       let (source_account, destination_account) = match tx_type {
            TransactionType::Withdrawal => {
-               if let Ok(account_id) = create_account_if_not_exists(
+               let source_account = create_account_if_not_exists(
                    &token,
                    &record.account,
                    &record.account,
-                   "expense",
-                ) {
-                   if let Ok(dest_acc_id) = create_account_if_not_exists(
-                        &token,
-                       &record.name,
-                       &record.counterparty,
-                       "expense",
-                    ){
-                       (account_id, dest_acc_id)
-                   } else {
-                       (0, 0)
-                   }
-               } else {
-                   (0, 0)
-               }
-           },
-           TransactionType::Deposit => {
-               if let Ok(account_id) = create_account_if_not_exists(
+                   "asset",
+               )?;
+
+                let destination_account = create_account_if_not_exists(
                    &token,
                    &record.name,
                    &record.counterparty,
                    "expense",
-                ) {
-                   if let Ok(dest_acc_id) = create_account_if_not_exists(
-                        &token,
-                        &record.account,
-                        &record.account,
-                        "expense",
-                    ) {
-                       (account_id, dest_acc_id)
-                   } else {
-                        (0,0)
-                   }
-               } else {
-                   (0, 0)
-               }
+               )?;
+                (source_account, destination_account)
+           },
+           TransactionType::Deposit => {
+                let source_account = create_account_if_not_exists(
+                   &token,
+                   &record.name,
+                   &record.counterparty,
+                   "expense",
+               )?;
 
+               let destination_account = create_account_if_not_exists(
+                   &token,
+                   &record.account,
+                   &record.account,
+                   "asset",
+               )?;
+                (source_account, destination_account)
            },
        };
 
@@ -73,8 +65,8 @@ impl TryFrom<&Record> for Transaction {
            amount,
            date: record.date.clone(),
            description: record.description.clone(),
-           source_account_id,
-           destination_account_id,
+           source_account,
+           destination_account,
        };
        Ok(tx)
    } 
@@ -85,49 +77,44 @@ pub enum TransactionType {
     Withdrawal,
     Deposit,
 }
-*/
-/*
-pub fn create_transaction(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::Error>> {
+
+pub fn create(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::Error>> {
     let tx_type: &str = match tx.r#type {
         TransactionType::Withdrawal => "withdrawal",
         TransactionType::Deposit => "deposit",
     };
 
-    println!("{:#?}", ureq::json!({
-        "data": {
+       println!("{:#?}", ureq::json!({
             "transactions": [{
                 "type": tx_type,
                 "date": tx.date,
                 "amount": tx.amount,
                 "description": tx.description,
-                "source_id": tx.source_account_id,
-                 "source_name": "Stuff And Things",
-                "destination_name": tx.description,
-               "destination_id": tx.destination_account_id,
-            }]
-        }}));
+                "source_id": tx.source_account.id,
+                "destination_id": tx.destination_account.id,
+            }]}));
 
-    let resp: String = ureq::post("https://accounting.boeschen.me/api/v1/transactions")
+    let mut description = "No description";
+    if tx.description != "" {
+        description = &tx.description;
+    }
+    let resp: String = ureq::post("http://localhost:8080/api/v1/transactions")
         .set("Authorization", &format!("Bearer {}", token))
         .set("accept", "application/vnd.api+json")
         .set("Content-Type", "application/json")
         .send_json(ureq::json!({
-            "data": {
             "transactions": [{
                 "type": tx_type,
                 "date": tx.date,
                 "amount": tx.amount,
-                "description": tx.description,
-//                "source_id": tx.source_account_id,
- //               "destination_id": tx.destination_account_id,
-                "source_name": "Stuff And Things",
-                "destination_name": tx.description,
+                "description": description,
+                "source_id": tx.source_account.id,
+                "destination_id": tx.destination_account.id,
             }]
-            }}))?
+            }))?
         .into_string()?;
 
     println!("{:#?}", resp);
 
     Ok(())
 }
-*/
