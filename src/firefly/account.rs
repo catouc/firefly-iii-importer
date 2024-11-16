@@ -33,20 +33,18 @@ pub fn create_account(
 ) -> Result<Account, Box<dyn std::error::Error>> {
     let request_body = match account_type {
         "asset" => ureq::json!({
-            "name": account_name,
+            "name": format!("{} ({})", account_name, account_iban),
             "type": account_type,
             "iban": account_iban,
             "account_role": "defaultAsset",
         }),
         _ => ureq::json!({
-            "name": account_name,
+            "name": format!("{} ({})", account_name, account_iban),
             "type": account_type,
             "iban": account_iban,
         }),
     };
 
-    println!("{}-{}-{}", account_name, account_iban, account_type);
-    println!("{:#?}", request_body);
     let resp: AccountResponse = ureq::post(
         "http://localhost:8080/api/v1/accounts"
     )
