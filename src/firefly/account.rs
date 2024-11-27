@@ -45,15 +45,33 @@ pub fn create_account(
         }),
     };
 
-    let resp: AccountResponse = ureq::post(
+    let resp = ureq::post(
         "http://localhost:8080/api/v1/accounts"
     )
         .set("Authorization", &format!("Bearer {}", token))
         .set("accept", "application/vnd.api+json")
         .set("Content-Type", "application/json")
-        .send_json(request_body)?
-        .into_json()?;
-    Ok(resp.data)
+        .send_json(&request_body);
+
+    match resp {
+        Err(error) => {
+            match error.into_response() {
+                Some(error_response) => {
+                    let err_str = error_response.into_string()?;
+                    println!("{:#?}", err_str);
+                    println!("{:#?}", request_body);
+                    Err("failed to call api".into())
+                }, 
+                None => {
+                    Err("API call failed and cannot reconstruct response".into())
+                }
+            }
+        },
+        Ok(response) => {
+            let account_response: AccountResponse = response.into_json()?;
+            Ok(account_response.data)
+        },
+    }
 }
 
 #[derive(Deserialize)]

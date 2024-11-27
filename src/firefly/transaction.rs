@@ -84,21 +84,11 @@ pub fn create(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::E
         TransactionType::Deposit => "deposit",
     };
 
-       println!("{:#?}", ureq::json!({
-            "transactions": [{
-                "type": tx_type,
-                "date": tx.date,
-                "amount": tx.amount,
-                "description": tx.description,
-                "source_id": tx.source_account.id,
-                "destination_id": tx.destination_account.id,
-            }]}));
-
     let mut description = "No description";
     if tx.description != "" {
         description = &tx.description;
     }
-    let resp: String = ureq::post("http://localhost:8080/api/v1/transactions")
+    let _ = ureq::post("http://localhost:8080/api/v1/transactions")
         .set("Authorization", &format!("Bearer {}", token))
         .set("accept", "application/vnd.api+json")
         .set("Content-Type", "application/json")
@@ -111,10 +101,6 @@ pub fn create(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::E
                 "source_id": tx.source_account.id,
                 "destination_id": tx.destination_account.id,
             }]
-            }))?
-        .into_string()?;
-
-    println!("{:#?}", resp);
-
+            }))?;
     Ok(())
 }
