@@ -17,7 +17,7 @@ pub fn create_account_if_not_exists(
         if let Some(iban) = &a.attributes.iban {
             return iban == account_iban
         }
-        a.attributes.name == account_name
+        a.attributes.name == format!("{} ({})", account_name, account_iban)
     }) {
         return Ok(account.clone())
     } else {
