@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::env;
 pub type AccountID = u32;
 
 #[derive(Deserialize)]
@@ -31,6 +32,7 @@ pub fn create_account(
     account_iban: &str,
     account_type: &str,
 ) -> Result<Account, Box<dyn std::error::Error>> {
+    let mut host = env::var("FIREFLY_HOST").unwrap();
     let request_body = match account_type {
         "asset" => ureq::json!({
             "name": format!("{} ({})", account_name, account_iban),
@@ -45,9 +47,8 @@ pub fn create_account(
         }),
     };
 
-    let resp = ureq::post(
-        "http://localhost:8080/api/v1/accounts"
-    )
+    host.push_str("/api/v1/accounts");
+    let resp = ureq::post(&host)
         .set("Authorization", &format!("Bearer {}", token))
         .set("accept", "application/vnd.api+json")
         .set("Content-Type", "application/json")
@@ -110,12 +111,14 @@ pub struct AccountAttributes {
 }
 
 pub fn list_all(token: &str) -> Result<Vec<Account>, Box<dyn std::error::Error>> {
+    let mut host = env::var("FIREFLY_HOST").unwrap();
+    host.push_str("/api/v1/accounts");
     let mut current_page = 0;
     let mut total_pages = 1;
     let mut accounts: Vec<Account> = Vec::new();
 
     while current_page < total_pages {
-        let resp: ListAccountResponse = ureq::get("http://localhost:8080/api/v1/accounts")
+        let resp: ListAccountResponse = ureq::get(&host)
             .set("Authorization", &format!("Bearer {}", token))
             .set("accept", "application/vnd.api+json")
             .set("Content-Type", "application/json")

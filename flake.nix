@@ -15,7 +15,7 @@
     {
       packages.x86_64-linux.default = pkgs.rustPlatform.buildRustPackage {
         pname = "firefly-iii-importer";
-        version = "0.1.0";
+        version = "0.1.1";
 
         nativeBuildInputs = with pkgs; [
           pkg-config
@@ -26,7 +26,7 @@
         ];
 
         src = ./.;
-        cargoHash = "sha256-Ti6701CxBTWSYZPLA/JVojGqhz9PWqKWF1HFmj4zxak=";
+        cargoHash = "sha256-mH0YUTOg74wti7lJMZSk9SxnPVuJx5w14W2hk3sUWKU=";
       };
 
       devShells.x86_64-linux.default = pkgs.mkShell {

@@ -79,6 +79,7 @@ pub enum TransactionType {
 }
 
 pub fn create(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::Error>> {
+    let mut host = env::var("FIREFLY_HOST").unwrap();
     let tx_type: &str = match tx.r#type {
         TransactionType::Withdrawal => "withdrawal",
         TransactionType::Deposit => "deposit",
@@ -88,7 +89,10 @@ pub fn create(token: &str, tx: &Transaction) -> Result<(), Box<dyn std::error::E
     if tx.description != "" {
         description = &tx.description;
     }
-    let _ = ureq::post("http://localhost:8080/api/v1/transactions")
+
+    host.push_str("/api/v1/transactions");
+    println!("{}", &host);
+    let _ = ureq::post(&host)
         .set("Authorization", &format!("Bearer {}", token))
         .set("accept", "application/vnd.api+json")
         .set("Content-Type", "application/json")
