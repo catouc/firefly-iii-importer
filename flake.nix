@@ -17,6 +17,7 @@
         pname = "firefly-iii-importer";
         version = "0.1.1";
 	useFetchCargoVendor = true;
+        cargoLock.lockFile = ./Cargo.lock;
 
         nativeBuildInputs = with pkgs; [
           pkg-config
@@ -38,6 +39,8 @@
           pkg-config
           rust-analyzer
           rustc
+	  rustPackages.clippy
+          rustPackages.rustfmt
         ];
       };
     };

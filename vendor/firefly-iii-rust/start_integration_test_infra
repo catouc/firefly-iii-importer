@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! [ $(id -u) = 0 ]; then
+	echo "The script needs to be run with sudo" >&2
+	exit 1
+fi
+
+podman run \
+	-d \
+	-e MYSQL_RANDOM_ROOT_PASSWORD=true \
+	-e MYSQL_USER=firefly \
+	-e MYSQL_PASSWORD='fireflyPassword' \
+	-e MYSQL_DATABASE=firefly \
+	-p 3306:3306 \
+	mysql:latest
+
+sleep 20
+APP_KEY=$(head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32 && echo)
+podman run \
+	-d \
+	-p 80:8080 \
+	-e APP_KEY="$APP_KEY" \
+	-e DB_HOST="127.0.0.1" \
+	-e DB_PORT=3306 \
+	-e DB_CONNECTION=mysql \
+	-e DB_DATABASE=firefly \
+	-e DB_USERNAME=firefly \
+	-e DB_PASSWORD=fireflyPassword \
+	--network=host \
+	fireflyiii/core:latest
+
+sleep 20
+export MYSQL_PWD='fireflyPassword'
+mysql -u firefly -h 127.0.0.1 < ./integration_test_setup.sql 
+
+echo "export FIREFLY_III_BASE_URL='http://127.0.0.1:8080/api'"
+
